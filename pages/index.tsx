@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
+import Skeleton from 'react-loading-skeleton'
 import { Data } from './api/data'
 
 const Home: NextPage = () => {
   const [isOnline, setIsOnline] = useState<null | boolean>(null)
 
   const fetchDate = async () => {
+    const timeout = setTimeout(() => {
+      setIsOnline(false)
+      return false
+    }, 1000)
     const response = await fetch('/api/data')
+    if (!response.status.toString().startsWith('2')) {
+      setIsOnline(false)
+      return false
+    }
+
+    clearTimeout(timeout)
     const data: Data = await response.json()
 
     if ((data as any)?.offline === true) {
@@ -43,7 +53,7 @@ const Home: NextPage = () => {
           <div className='flex justify-center items-center gap-2'>
             {
               isOnline === null ? (
-                <div></div>
+                <Skeleton width={'100%'} />
               ) : (isOnline ? (
                 <>
                   <span className='w-16 h-16 bg-green-500 rounded-full'></span>
