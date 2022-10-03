@@ -20,3 +20,34 @@ a {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@mixin dot() {
+  position: fixed;
+  left: random($limit: 100) + percentage($number: 0);
+  top: random($limit: 100) + percentage($number: 0);
+  width: 20px;
+  height: 20px;
+  &::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    box-shadow: 0px 0px 200px 100px rgba(0, 204, 255, 0.75);
+  }
+}
+
+.dot {
+  @include dot();
+  // font-size: 12em;
+  // content: '.';
+}
+
+
+
+@keyframes move {
+  from {
+    transform: rotate(0deg) scale(12) translateX(-20px);
+  }
+  to {
+    transform: rotate(360deg) scale(18) translateX(20px);
+  }
+}

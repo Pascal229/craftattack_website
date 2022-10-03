@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { servertapRequest } from '../../utils/ServertapRequest'
 
-export type Data = {
+export type ServerData = {
     tps: number,
     onlinePlayers: number,
     maxPlayers: number,
@@ -17,7 +17,7 @@ export type Data = {
 
 export default async function handler(
     req: NextApiRequest,
-    res: NextApiResponse<Data | { offline: true }>
+    res: NextApiResponse<ServerData | { offline: true }>
 ) {
     const response = await servertapRequest('server')
 

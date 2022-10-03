@@ -1,40 +1,73 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Skeleton from 'react-loading-skeleton'
-import { Data } from './api/data'
+import { ServerData } from './api/data'
+import dynamic from 'next/dynamic'
+import { ChartData } from './api/chart'
+import { BetterDate } from '../utils/betterdate'
+
+const ReactApexChart = dynamic(
+  () => import('react-apexcharts'),
+  { ssr: false }
+)
 
 const Home: NextPage = () => {
-  const [isOnline, setIsOnline] = useState<null | boolean>(null)
+  const [serverData, setServerData] = useState<null | ServerData>(null)
+  const [chartData, setChartData] = useState<null | ChartData>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const fetchDate = async () => {
+  const mouseDiv = useRef<HTMLDivElement>(null)
+
+  const fetchServerData = async () => {
     const timeout = setTimeout(() => {
-      setIsOnline(false)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
       return false
     }, 1000)
     const response = await fetch('/api/data')
     if (!response.status.toString().startsWith('2')) {
-      setIsOnline(false)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
       return false
     }
 
     clearTimeout(timeout)
-    const data: Data = await response.json()
+    const data: ServerData = await response.json()
 
     if ((data as any)?.offline === true) {
-      setIsOnline(false)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
       return
     }
 
-    setIsOnline(true)
+    setServerData(data)
+  }
+
+  const fetchChartData = async () => {
+    const response = await fetch('/api/chart')
+    const data: ChartData = await response.json()
+
+    if ((data as any)?.offline === true) {
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
+      return
+    }
+
+    setChartData(data)
   }
 
   useEffect(() => {
-    fetchDate()
-  })
+    fetchServerData()
+    fetchChartData()
+
+    window.onmousemove = (e) => {
+      if (mouseDiv.current) {
+        mouseDiv.current.style.left = e.clientX + 'px'
+        mouseDiv.current.style.top = e.clientY + 'px'
+      }
+    }
+  }, [])
 
   return (
-    <div className="h-screen overflow-y-auto bg-green-200 flex justify-center">
+    <div className="h-screen overflow-y-auto bg-black text-white flex justify-center -z-20">
+      <div ref={mouseDiv} className='dot'></div>
       <Head>
         <title>Status - Craftattack</title>
         <meta name="description" content="Craftattack Website" />
@@ -42,37 +75,121 @@ const Home: NextPage = () => {
       </Head>
 
       <div className='max-w-6xl w-full h-full'>
-        <header className='p-2'>
+        <header className='p-2 z-20'>
           <h1 className='flex justify-center'>
-            <div className='bg-black w-full flex justify-center rounded-2xl text-white text-6xl p-3'>
+            <div className='z-20 border-2 border-white w-full flex justify-center rounded-2xl text-white text-2xl md:text-6xl p-3'>
               Craftattack Status
             </div>
           </h1>
         </header>
         <main className='mt-5'>
-          <div className='flex justify-center items-center gap-2'>
+          <section className='flex justify-center items-center gap-2'>
             {
-              isOnline === null ? (
+              serverData === null ? (
                 <Skeleton width={'100%'} />
-              ) : (isOnline ? (
-                <>
-                  <span className='w-16 h-16 bg-green-500 rounded-full'></span>
-                  <span className='text-6xl pb-2'>Online</span>
-                </>
+              ) : (serverData?.tps ? (
+                <div className='flex flex-col gap-3 z-20'>
+                  <div className='flex gap-2 justify-center items-center mb-5'>
+                    <span className='md:w-20 md:h-20 w-8 h-8 bg-green-500 rounded-full'></span>
+                    <span className='text-4xl md:text-7xl pb-2'>ONLINE</span>
+                  </div>
+                  <div className='w-fit rounded-md p-2 border-2 border-white border-solid z-20'>
+                    <div className='text-2xl md:text-4xl flex'><div className='md:min-w-[18rem]'>TPS:</div> <strong>{serverData.tps}</strong></div>
+                    <div className='text-2xl md:text-4xl flex'><div className='md:min-w-[18rem]'>Spieler online:</div> <strong>{serverData.onlinePlayers}</strong></div>
+                    <div className='text-2xl md:text-4xl flex'><div className='md:min-w-[18rem]'>RAM Auslastung:</div> <strong>{Math.round(100 - 100 / serverData.health.maxMemory * serverData.health.freeMemory) + '%'}</strong></div>
+                  </div>
+                </div>
               ) : (
                 <>
                   <span className='w-16 h-16 bg-red-500 rounded-full'></span>
-                  <span className='text-6xl pb-2'>Offline</span>
+                  <span className='text-6xl pb-2'>OFFLINE</span>
                 </>
               ))
 
 
             }
+          </section>
+          <div className='flex justify-center mt-5'>
+            <button className='cursor-pointer mx-5 mb-5 p-2 z-20 hover:bg-white hover:text-black transition-colors border-white border-2 h rounded-md min-w-[8rem]' onClick={() => {
+              if (isRefreshing) return
+              setIsRefreshing(true)
+              fetchServerData()
+              fetchChartData()
+              setTimeout(() => {
+                setIsRefreshing(false)
+              }, 100)
+            }}>{isRefreshing ? 'Refreshing...' : 'Refresh'}</button>
           </div>
+          <section className='mt-10'>
+            <h2 className='text-center text-4xl'>Statistik</h2>
+            <div className='z-20'>
+              {
+                <ReactApexChart
+                  options={{
+                    theme: {
+                      mode: 'dark',
+                    },
+                    tooltip: {},
+                    chart: {
+                      background: 'transparent',
+                      id: "basic-bar",
+                      toolbar: {
+                        tools: {
+                          selection: false,
+                          pan: false,
+                          download: false,
+                        }
+                      }
+                    },
+
+                    xaxis: {
+                      categories: chartData?.map((data) => new BetterDate(data.createdAt).format('dd.MM.yyyy HH:mm:ss')) ?? []
+                    },
+                    yaxis: [
+                      {
+                        seriesName: 'TPS',
+                      },
+                      {
+                        seriesName: 'RAM (GB)',
+                        opposite: true,
+                        max: 10,
+                      },
+                      {
+                        seriesName: 'Spieler',
+                        max: 10,
+                      },
+                    ],
+                    stroke: {
+                      curve: 'smooth'
+                    },
+                  }}
+                  series={[
+                    {
+                      type: 'line',
+                      name: "TPS",
+                      data: chartData?.map((data) => data.tps) ?? []
+                    },
+                    {
+                      type: 'line',
+                      name: "Spieler",
+                      data: chartData?.map((data) => data.onlinePlayers) ?? []
+                    },
+                    {
+                      type: 'line',
+                      name: "RAM (GB)",
+                      data: chartData?.map((data) => (data.usedMemory / 1000 / 1000 / 1000).toFixed(2) as any) ?? [],
+                    },
+                  ]}
+                  width="100%"
+                // height="100%"
+                />
+              }
+            </div>
+          </section>
         </main>
 
       </div>
-    </div>
+    </div >
   )
 }
 
