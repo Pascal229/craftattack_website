@@ -6,6 +6,7 @@ import { ServerData } from './api/data'
 import dynamic from 'next/dynamic'
 import { ChartData } from './api/chart'
 import { BetterDate } from '../utils/betterdate'
+import Image from 'next/image'
 
 const ReactApexChart = dynamic(
   () => import('react-apexcharts'),
@@ -57,7 +58,7 @@ const Home: NextPage = () => {
     fetchServerData()
     fetchChartData()
 
-    window.onmousemove = (e) => {
+    window.onpointermove = (e) => {
       if (mouseDiv.current) {
         mouseDiv.current.style.left = e.clientX + 'px'
         mouseDiv.current.style.top = e.clientY + 'px'
@@ -94,9 +95,9 @@ const Home: NextPage = () => {
                     <span className='text-4xl md:text-7xl pb-2'>ONLINE</span>
                   </div>
                   <div className='w-fit rounded-md p-2 border-2 border-white border-solid z-20'>
-                    <div className='text-2xl md:text-4xl flex'><div className='md:min-w-[18rem]'>TPS:</div> <strong>{serverData.tps}</strong></div>
-                    <div className='text-2xl md:text-4xl flex'><div className='md:min-w-[18rem]'>Spieler online:</div> <strong>{serverData.onlinePlayers}</strong></div>
-                    <div className='text-2xl md:text-4xl flex'><div className='md:min-w-[18rem]'>RAM Auslastung:</div> <strong>{Math.round(100 - 100 / serverData.health.maxMemory * serverData.health.freeMemory) + '%'}</strong></div>
+                    <div className='text-2xl md:text-4xl flex gap-1'><div className='md:min-w-[18rem]'>TPS:</div> <strong>{serverData.tps}</strong></div>
+                    <div className='text-2xl md:text-4xl flex gap-1'><div className='md:min-w-[18rem]'>Spieler online:</div> <strong>{serverData.onlinePlayers}</strong></div>
+                    <div className='text-2xl md:text-4xl flex gap-1'><div className='md:min-w-[18rem]'>RAM Auslastung:</div> <strong>{Math.round(100 - 100 / serverData.health.maxMemory * serverData.health.freeMemory) + '%'}</strong></div>
                   </div>
                 </div>
               ) : (
@@ -120,6 +121,22 @@ const Home: NextPage = () => {
               }, 100)
             }}>{isRefreshing ? 'Refreshing...' : 'Refresh'}</button>
           </div>
+          <section className='px-5'>
+            <h2 className='text-center text-4xl mb-5'>Spieler</h2>
+            <div className='flex flex-col gap-3'>
+              {
+                serverData?.player.map((player, i) => (
+                  <div key={i} className='flex justify-center items-center gap-2'>
+                    <div className='flex gap-2 items-center border-2 border-white rounded-md gap-2 p-3'>
+                      <Image src={`https://crafatar.com/avatars/${player.uuid}?size=32&overlay`} alt={player.name} width={20} height={20} className='w-8 h-8 rounded-md' />
+                      <span className='text-2xl w-40 overflow-hidden text-ellipsis'>{player.name}</span>
+                      <span>{new BetterDate(player.lastPlayed).format('HH:mm:ss dd.MM.yyyy')}</span>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </section>
           <section className='mt-10'>
             <h2 className='text-center text-4xl'>Statistik</h2>
             <div className='z-20'>

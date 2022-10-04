@@ -13,13 +13,20 @@ export type ServerData = {
         freeMemory: number,
         maxMemory: number,
     },
+    player: {
+        uuid: string,
+        name: string,
+        lastPlayed: number,
+    }[]
 }
 
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<ServerData | { offline: true }>
 ) {
-    const response = await servertapRequest('server')
+    const responsePromise = servertapRequest('server')
+    const playerPromise = servertapRequest('players/all')
+    const [response, player] = await Promise.all([responsePromise, playerPromise])
 
     if (response === false)
         return res.status(200).json({ offline: true });
@@ -34,7 +41,14 @@ export default async function handler(
             totalMemory: response.health.totalMemory,
             freeMemory: response.health.freeMemory,
             maxMemory: response.health.maxMemory,
-        }
+        },
+        player: player.map((p: any) => {
+            return {
+                uuid: p.uuid,
+                name: p.name,
+                lastPlayed: p.lastPlayed,
+            }
+        }).sort((a: any, b: any) => b.lastPlayed - a.lastPlayed)
     }
 
     res.status(200).json(data)
