@@ -22,12 +22,12 @@ const Home: NextPage = () => {
 
   const fetchServerData = async () => {
     const timeout = setTimeout(() => {
-      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null, player: null } as any)
       return false
     }, 1000)
     const response = await fetch('/api/data')
     if (!response.status.toString().startsWith('2')) {
-      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null, player: null } as any)
       return false
     }
 
@@ -35,7 +35,7 @@ const Home: NextPage = () => {
     const data: ServerData = await response.json()
 
     if ((data as any)?.offline === true) {
-      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null, player: null } as any)
       return
     }
 
@@ -47,7 +47,7 @@ const Home: NextPage = () => {
     const data: ChartData = await response.json()
 
     if ((data as any)?.offline === true) {
-      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null } as any)
+      setServerData({ healthy: null, maxPlayers: null, onlinePlayers: null, tps: null, player9: null } as any)
       return
     }
 
@@ -121,22 +121,25 @@ const Home: NextPage = () => {
               }, 100)
             }}>{isRefreshing ? 'Refreshing...' : 'Refresh'}</button>
           </div>
-          <section className='px-5'>
-            <h2 className='text-center text-4xl mb-5'>Spieler</h2>
-            <div className='flex flex-col gap-3'>
-              {
-                serverData?.player.map((player, i) => (
-                  <div key={i} className='flex justify-center items-center gap-2'>
-                    <div className='flex gap-2 items-center border-2 border-white rounded-md gap-2 p-3'>
-                      <Image src={`https://crafatar.com/avatars/${player.uuid}?size=32&overlay`} alt={player.name} width={20} height={20} className='w-8 h-8 rounded-md' />
-                      <span className='text-2xl w-40 overflow-hidden text-ellipsis'>{player.name}</span>
-                      <span>{new BetterDate(player.lastPlayed).format('HH:mm:ss dd.MM.yyyy')}</span>
-                    </div>
-                  </div>
-                ))
-              }
-            </div>
-          </section>
+          {
+            serverData?.player && (
+              <section className='px-5'>
+                <h2 className='text-center text-4xl mb-5'>Spieler</h2>
+                <div className='flex flex-col gap-3'>
+                  {
+                    serverData?.player.map((player, i) => (
+                      <div key={i} className='flex justify-center items-center gap-2'>
+                        <div className='flex gap-2 items-center border-2 border-white rounded-md gap-2 p-3'>
+                          <Image src={`https://crafatar.com/avatars/${player.uuid}?size=32&overlay`} alt={player.name} width={20} height={20} className='w-8 h-8 rounded-md' />
+                          <span className='text-2xl w-40 overflow-hidden text-ellipsis'>{player.name}</span>
+                          <span>{new BetterDate(player.lastPlayed).format('HH:mm:ss dd.MM.yyyy')}</span>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              </section>
+            )}
           <section className='mt-10'>
             <h2 className='text-center text-4xl'>Statistik</h2>
             <div className='z-20'>
