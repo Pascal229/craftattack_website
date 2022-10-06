@@ -2,6 +2,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { servertapRequest } from '../../utils/ServertapRequest'
 
+type Player = {
+    uuid: string
+}
+
 export type ServerData = {
     tps: number,
     onlinePlayers: number,
@@ -13,11 +17,8 @@ export type ServerData = {
         freeMemory: number,
         maxMemory: number,
     },
-    player: {
-        uuid: string,
-        name: string,
-        lastPlayed: number,
-    }[]
+    player: (Player & { lastPlayed: number, name: string })[]
+    onlinePlayer: Player[]
 }
 
 export default async function handler(
@@ -26,10 +27,13 @@ export default async function handler(
 ) {
     const responsePromise = servertapRequest('server')
     const playerPromise = servertapRequest('players/all')
-    const [response, player] = await Promise.all([responsePromise, playerPromise])
+    const onlinePlayerPromise = servertapRequest('players')
+    const [response, player, onlinePlayer] = await Promise.all([responsePromise, playerPromise, onlinePlayerPromise])
 
     if (response === false)
         return res.status(200).json({ offline: true });
+
+    // console.log(response)
 
     const data = {
         tps: response.tps,
@@ -48,7 +52,13 @@ export default async function handler(
                 name: p.name,
                 lastPlayed: p.lastPlayed,
             }
-        }).sort((a: any, b: any) => b.lastPlayed - a.lastPlayed)
+        }).sort((a: any, b: any) => b.lastPlayed - a.lastPlayed),
+        onlinePlayer: onlinePlayer.map((p: any) => {
+            return {
+                uuid: p.uuid,
+                name: p.name,
+            }
+        })
     }
 
     res.status(200).json(data)

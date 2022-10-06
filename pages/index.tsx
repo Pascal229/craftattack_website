@@ -127,14 +127,12 @@ const Home: NextPage = () => {
                 <h2 className='text-center text-4xl mb-5'>Spieler</h2>
                 <div className='flex flex-col gap-3'>
                   {
-                    serverData?.player.map((player, i) => (
-                      <div key={i} className='flex justify-center items-center gap-2'>
-                        <div className='flex gap-2 items-center border-2 border-white rounded-md gap-2 p-3'>
-                          <Image src={`https://crafatar.com/avatars/${player.uuid}?size=32&overlay`} alt={player.name} width={20} height={20} className='w-8 h-8 rounded-md' />
-                          <span className='text-2xl w-40 overflow-hidden text-ellipsis'>{player.name}</span>
-                          <span>{new BetterDate(player.lastPlayed).format('HH:mm:ss dd.MM.yyyy')}</span>
-                        </div>
-                      </div>
+                    serverData?.player.map(p => {
+                      if (serverData?.onlinePlayer.find(op => op.uuid === p.uuid))
+                        return { ...p, online: true }
+                      return { ...p, online: false }
+                    }).sort((a, b) => a.online === true && b.online === false ? -1 : 0).map((player, i) => (
+                      <PlayerItem key={i} player={player} />
                     ))
                   }
                 </div>
@@ -210,6 +208,23 @@ const Home: NextPage = () => {
 
       </div>
     </div >
+  )
+}
+
+const PlayerItem = (props: { player: ServerData['player'][number] & { online: boolean } }) => {
+  return (
+    <div className='flex justify-center items-center gap-2'>
+      <div className='flex gap-2 items-center border-2 border-white rounded-md p-3 max-w-sm w-full'>
+        <Image src={`https://crafatar.com/avatars/${props.player.uuid}?size=32&overlay`} alt={props.player.name} width={20} height={20} className='w-8 h-8 rounded-md' />
+        <span className='text-2xl w-40 overflow-hidden text-ellipsis'>{props.player.name}</span>
+        {
+          props.player.online ?
+            <span className='text-green-500 flex-1 text-right'>Online</span>
+            :
+            <span className='flex-1 text-right'>{new BetterDate((props.player as any).lastPlayed).format('HH:mm:ss dd.MM.yyyy')}</span>
+        }
+      </div>
+    </div>
   )
 }
 
