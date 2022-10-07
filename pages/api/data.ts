@@ -52,7 +52,7 @@ export default async function handler(
                 name: p.name,
                 lastPlayed: p.lastPlayed,
             }
-        }).sort((a: any, b: any) => b.lastPlayed - a.lastPlayed),
+        }).sort((a: any, b: any) => b.lastPlayed < a.lastPlayed ? 1 : -1),
         onlinePlayer: onlinePlayer.map((p: any) => {
             return {
                 uuid: p.uuid,
