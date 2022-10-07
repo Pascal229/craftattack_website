@@ -174,7 +174,6 @@ const Home: NextPage = () => {
                       },
                       {
                         seriesName: 'Spieler',
-                        max: 10,
                       },
                     ],
                     stroke: {
