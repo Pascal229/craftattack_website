@@ -131,7 +131,7 @@ const Home: NextPage = () => {
                       if (serverData?.onlinePlayer.find(op => op.uuid === p.uuid))
                         return { ...p, online: true }
                       return { ...p, online: false }
-                    }).sort((a, b) => a.online === true && b.online === false ? -1 : 0).map((player, i) => (
+                    }).sort((a, b) => a.online === true && b.online === false ? -1 : 1).map((player, i) => (
                       <PlayerItem key={i} player={player} />
                     ))
                   }
