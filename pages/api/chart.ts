@@ -18,7 +18,7 @@ export default async function handler(
         createdAt: {
             $gt: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 7)
         }
-    }).sort({ createdAt: -1 }).limit(100);
+    }).sort({ createdAt: -1 });
 
     res.status(200).json(latestLogs.reverse())
 }

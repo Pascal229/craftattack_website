@@ -46,7 +46,7 @@ setInterval(async () => {
 
     const oldLogs = Log.find({
         createdAt: {
-            $lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 7)
+            $lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 30)
         }
     })
     await oldLogs.deleteMany();
