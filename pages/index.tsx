@@ -170,7 +170,6 @@ const Home: NextPage = () => {
                       {
                         seriesName: 'RAM (GB)',
                         opposite: true,
-                        max: 10,
                       },
                       {
                         seriesName: 'Spieler',
